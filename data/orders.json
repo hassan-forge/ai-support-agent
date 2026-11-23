@@ -1,0 +1,5 @@
+[
+  {"id": "ORD-1042", "customer": "dana@example.com", "status": "shipped", "eta": "2026-11-27", "total": 84.5, "items": ["Desk lamp", "LED bulb pack"]},
+  {"id": "ORD-1043", "customer": "lee@example.com", "status": "processing", "eta": null, "total": 29.99, "items": ["Notebook set"]},
+  {"id": "ORD-1044", "customer": "sam@example.com", "status": "delivered", "eta": null, "total": 219.0, "items": ["Office chair"]}
+]
