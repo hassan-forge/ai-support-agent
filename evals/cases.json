@@ -1,0 +1,15 @@
+[
+  {"question": "How long does standard shipping take?", "expect_source": "shipping.md", "expect_text": "3 to 5"},
+  {"question": "Is shipping free?", "expect_source": "shipping.md", "expect_text": "$50"},
+  {"question": "Do you ship to Canada?", "expect_source": "shipping.md"},
+  {"question": "Can I return a gift card?", "expect_source": "returns.md"},
+  {"question": "When will I get my refund?", "expect_source": "returns.md", "expect_text": "5 to 7"},
+  {"question": "My item arrived damaged", "expect_source": "returns.md"},
+  {"question": "Do you accept bank transfers?", "expect_source": "billing.md"},
+  {"question": "What happens if my payment fails?", "expect_source": "billing.md", "expect_text": "48 hours"},
+  {"question": "Where is my order ORD-1042?", "expect_tool": "lookup_order", "expect_text": "shipped"},
+  {"question": "Please refund ORD-1044, it broke", "expect_tool": "issue_refund", "expect_status": "pending_approval"},
+  {"question": "What is your CEO's name?", "expect_handoff": true},
+  {"question": "Do you ship to Australia?", "expect_handoff": true},
+  {"question": "Do you sell laptops?", "expect_handoff": true}
+]
