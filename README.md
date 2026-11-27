@@ -8,6 +8,14 @@ A customer support agent that answers from your own documents with sources, look
 
 It's a reference project showing how I build AI agents for production: the model is only one part, and most of the work is in grounding, guardrails, approvals, logging and tests.
 
+It comes in two parts: a **FastAPI backend** (the agent, tools, approvals and audit log) and a **Next.js web app** with a customer chat and a support console where a person approves or rejects risky actions.
+
+| Customer chat | Support console |
+|---|---|
+| ![Customer chat with citations and tool calls](docs/customer-chat.png) | ![Support console with the approval queue and audit log](docs/support-console.png) |
+
+<sub>Screenshots use the built-in mock model, so they run with no API key.</sub>
+
 ```
 POST /chat  {"message": "Please refund ORD-1044, the chair broke"}
 
@@ -56,6 +64,8 @@ customer message
 | `app/retrieval.py` | BM25 retrieval over markdown with an idf-weighted coverage gate |
 | `app/store.py` | Orders, tickets, approvals, conversations and the audit log |
 | `app/main.py` | FastAPI endpoints |
+| `web/app/page.tsx` | Customer chat: answers, numbered sources and tool-call status |
+| `web/app/console/page.tsx` | Support console: approve or reject refunds, tickets, live audit log |
 | `evals/` | Eval cases and a runner that scores any provider |
 
 Retrieval is dependency-free on purpose, so the code stays easy to read. In client projects the same `Retriever.search` interface sits on top of embeddings in pgvector, Qdrant or a managed vector store.
@@ -82,6 +92,18 @@ curl -X POST localhost:8000/approvals/<approval_id>/approve \
   -H "content-type: application/json" -d '{"reviewer": "maria"}'
 ```
 
+### Web app
+
+In a second terminal, with the API running on port 8000:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open http://localhost:3000 for the customer chat and http://localhost:3000/console for the support console. Ask for a refund in the chat, then approve it in the console and watch it appear in the audit log. The web app forwards `/api/*` to the backend, so the API never has to be exposed to the browser directly.
+
 ### Use a real model
 
 ```bash
@@ -93,14 +115,13 @@ uvicorn app.main:app
 ### Docker
 
 ```bash
-docker build -t ai-support-agent .
-docker run -p 8000:8000 --env-file .env ai-support-agent
+docker compose up --build   # API on :8000, web app on :3000
 ```
 
 ## Tests and evals
 
 ```bash
-pytest -q                 # 30 tests: retrieval, agent behaviour, API, provider request formats
+pytest -q                 # 31 tests: retrieval, agent behaviour, API, provider request formats
 python -m evals.run_evals # 13 behaviour checks; set LLM_PROVIDER to score a real model
 ```
 
@@ -112,14 +133,14 @@ The tests cover the parts that tend to break in production:
 - unknown tools are refused
 - Claude and OpenAI requests are built and parsed correctly, checked against mocked HTTP responses
 
-CI runs lint, tests and evals on Python 3.11, 3.12 and 3.13.
+CI runs lint, tests and evals on Python 3.11, 3.12 and 3.13, and type-checks and builds the web app.
 
 ## API
 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/chat` | Send a message, get an answer, citations and actions |
-| `GET` | `/approvals?status=pending` | Actions waiting for a person |
+| `GET` | `/approvals?status=pending` | Actions by status: `pending` (default), `approved`, `rejected` or `all` |
 | `POST` | `/approvals/{id}/approve` | Approve and run the action |
 | `POST` | `/approvals/{id}/reject` | Reject the action |
 | `GET` | `/tickets` | Tickets opened by the agent |
@@ -132,7 +153,7 @@ The agent is a plain HTTP API, so it fits into what a team already uses:
 
 - **n8n, Make or Zapier:** trigger on a new email or form, call `POST /chat`, and post the answer back, or route `handed_off: true` to a Slack channel
 - **Help desk:** call it from a Zendesk, Intercom or Freshdesk webhook and post the reply as an internal note for an agent to check
-- **Approvals:** surface `GET /approvals` in Slack or an internal admin page
+- **Approvals:** use the included support console, or surface `GET /approvals` in Slack
 
 ## License
 
