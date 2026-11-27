@@ -53,7 +53,8 @@ def chat(req: ChatRequest, agent: Agent = Depends(get_agent)) -> dict:
 
 @app.get("/approvals")
 def approvals(status: str | None = "pending", agent: Agent = Depends(get_agent)) -> list[dict]:
-    return agent.store.list_approvals(status)
+    """List approvals by status: pending (default), approved, rejected, or all."""
+    return agent.store.list_approvals(None if status == "all" else status)
 
 
 @app.post("/approvals/{approval_id}/approve")

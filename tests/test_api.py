@@ -32,3 +32,14 @@ def test_missing_approval_is_404(client):
 
 def test_empty_message_is_rejected(client):
     assert client.post("/chat", json={"message": ""}).status_code == 422
+
+
+def test_approvals_can_be_filtered_by_status(client):
+    reply = client.post("/chat", json={"message": "Please refund ORD-1044, it arrived broken"}).json()
+    approval_id = reply["actions"][0]["approval_id"]
+    client.post(f"/approvals/{approval_id}/reject", json={"reviewer": "maria"})
+
+    assert client.get("/approvals").json() == []
+    rejected = client.get("/approvals?status=rejected").json()
+    assert [a["id"] for a in rejected] == [approval_id]
+    assert [a["id"] for a in client.get("/approvals?status=all").json()] == [approval_id]
